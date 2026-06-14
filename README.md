@@ -19,9 +19,7 @@
 
 <br/>
 
-<img src="outputs/figures/fig_07_shap_beeswarm.png" width="700" alt="SHAP Beeswarm"/>
 
-<sub>Global SHAP Feature Importance — E-Cadherin protein dominates IDC vs ILC classification</sub>
 
 </div>
 
@@ -325,6 +323,9 @@ All models evaluated using **Stratified 5-Fold CV** with **SMOTE-inside-CV** pip
 > **Key Finding:** mRNA + Protein together account for **93.5%** of the SHAP attribution. This is independently confirmed by the ablation study (removing Protein causes the largest performance drop). E-Cadherin loss — the defining hallmark of ILC — emerges as the #1 feature.
 
 <div align="center">
+  <img src="outputs/figures/fig_07_shap_beeswarm.png" width="700" alt="SHAP Beeswarm"/>
+<br/>
+<sub>Global SHAP Feature Importance — E-Cadherin protein dominates IDC vs ILC classification</sub>
 <img src="outputs/figures/fig_08_omics_attribution.png" width="650" alt="Omics Attribution"/>
 <br/>
 <sub>Cross-Omics SHAP Attribution — mRNA and Protein dominate IDC vs ILC classification</sub>
