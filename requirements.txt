@@ -5,4 +5,7 @@ imbalanced-learn
 matplotlib
 seaborn
 xgboost
+lightgbm
+shap
+boruta
 joblib

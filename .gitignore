@@ -1,6 +1,39 @@
-assets/
-assests/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Large data files (keep in data/ but exclude from git if too large)
+# data/*.csv
+
+# Model files (large binaries)
+outputs/models/*.joblib
+
+# Preprocessed numpy files
+outputs/preprocessed/*.npy
+
+# Jupyter
 .ipynb_checkpoints/
+
+# Gemini
+.gemini/
