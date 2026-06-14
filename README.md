@@ -1,462 +1,563 @@
-<div align="center">
+<p align="center">
+  <h1 align="center">Explainable Multi-Omics Breast Cancer Classification</h1>
+  <p align="center">
+    <strong>Consensus Feature Selection | Ensemble Learning | Cross-Omics SHAP Attribution</strong>
+    <br/>
+    TCGA BRCA Cohort &mdash; 705 Patients &times; 1,837 Features &times; 4 Omics Layers
+  </p>
+</p>
 
-# 🧬 Multi-Omics Breast Cancer Classification
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python" alt="Python"/>
+  <img src="https://img.shields.io/badge/ML-scikit--learn%20|%20XGBoost%20|%20LightGBM-orange?style=flat-square" alt="ML"/>
+  <img src="https://img.shields.io/badge/XAI-SHAP-green?style=flat-square" alt="SHAP"/>
+  <img src="https://img.shields.io/badge/Data-TCGA%20BRCA-red?style=flat-square" alt="TCGA"/>
+  <img src="https://img.shields.io/badge/Figures-22-purple?style=flat-square" alt="Figures"/>
+  <img src="https://img.shields.io/badge/Best%20F1-0.917-brightgreen?style=flat-square" alt="F1"/>
+</p>
 
-### *DC-CRO Feature Selection × Explainable AI*
+---
 
-[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.x-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
-[![XGBoost](https://img.shields.io/badge/XGBoost-Latest-006600?style=for-the-badge)](https://xgboost.readthedocs.io)
-[![License](https://img.shields.io/badge/License-Academic-purple?style=for-the-badge)](#license)
+## Table of Contents
 
-<br/>
+- [Overview](#overview)
+- [Key Results at a Glance](#key-results-at-a-glance)
+- [Scientific Contributions](#scientific-contributions)
+- [Methodology](#methodology)
+  - [Pipeline Architecture](#pipeline-architecture)
+  - [3-Stage Feature Selection](#3-stage-consensus-feature-selection)
+  - [SMOTE-Inside-CV](#smote-inside-cv-preventing-data-leakage)
+  - [Cross-Omics SHAP Attribution](#cross-omics-shap-attribution)
+- [Results & Analysis](#results--analysis)
+  - [8-Model Comparison](#8-model-comparison)
+  - [Statistical Significance](#statistical-significance)
+  - [Omics Ablation Study](#omics-ablation-study)
+  - [SHAP Explainability](#shap-explainability)
+  - [Fusion Strategy Comparison](#fusion-strategy-comparison)
+- [Figures Gallery](#figures-gallery)
+- [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
+- [Generated Outputs](#generated-outputs)
+- [Limitations & Future Work](#limitations--future-work)
+- [References](#references)
 
-> **Classifying breast cancer subtypes from integrated multi-omics data using Diversity-Controlled Chemical Reaction Optimization (DC-CRO) for feature selection and SHAP-based Explainable AI for model interpretability.**
+---
 
-<br/>
+## Overview
+
+This thesis develops a **fully explainable machine learning pipeline** for classifying breast cancer histological subtypes -- **Infiltrating Ductal Carcinoma (IDC)** vs **Infiltrating Lobular Carcinoma (ILC)** -- using integrated multi-omics data from the TCGA Breast Cancer (BRCA) cohort.
+
+The pipeline addresses three key gaps in the existing multi-omics classification literature:
+
+1. **Single-method feature selection bias** -- solved by a novel 3-stage consensus funnel
+2. **Data leakage from SMOTE** -- solved by imblearn Pipeline with SMOTE inside CV folds
+3. **Lack of omics-level explainability** -- solved by cross-omics SHAP attribution analysis
+
+### Dataset
+
+| Property | Value |
+|:---------|:------|
+| **Source** | [TCGA Breast Cancer (BRCA)](https://portal.gdc.cancer.gov/) |
+| **Patients** | 705 |
+| **Raw Features** | 1,941 (1,837 after content-based deduplication) |
+| **Omics Layer 1** | mRNA Expression (`rs_*`) -- 604 features |
+| **Omics Layer 2** | Copy Number Variation (`cn_*`) -- 761 features |
+| **Omics Layer 3** | DNA Methylation (`mu_*`) -- 249 features |
+| **Omics Layer 4** | Protein / RPPA (`pp_*`) -- 223 features |
+| **Target** | `histological.type`: IDC (574, 81.4%) vs ILC (131, 18.6%) |
+| **Imbalance Ratio** | 4.4:1 |
+
+<p align="center">
+  <img src="outputs/figures/fig_02_label_dist.png" width="500" alt="Class Distribution"/>
+</p>
+
+---
+
+## Key Results at a Glance
+
+| Metric | Value |
+|:-------|:------|
+| **Best Model** | LightGBM (tuned) |
+| **F1-Macro** | **0.9174 ± 0.0128** |
+| **Accuracy** | **95.0%** |
+| **AUC-ROC** | **0.9654** |
+| **MCC** | **0.8363** |
+| **Features Used** | 75 out of 1,837 (96% reduction) |
+| **Best Fusion** | Late Fusion -- F1=0.925, AUC=0.984 |
+| **Top Biomarker** | E-Cadherin (pp_E.Cadherin) |
+| **Dominant Omics** | mRNA (54.5%) + Protein (39.0%) = 93.5% |
+
+---
+
+## Scientific Contributions
+
+### C1. Three-Stage Consensus Feature Selection
+
+> Reduced 1,837 multi-omics features to 75 using a novel 3-stage funnel: Variance Threshold → ANOVA + Mutual Information per omics group → RF + XGBoost consensus importance ranking. Multi-source agreement eliminates single-method bias.
+
+### C2. SMOTE-Inside-CV (Methodological Correction)
+
+> Used `imblearn.Pipeline` to apply SMOTE **exclusively within training folds**, preventing information leakage. The majority of published multi-omics classification papers apply SMOTE before the cross-validation split -- a well-documented flaw that inflates reported performance metrics.
+
+### C3. Cross-Omics SHAP Attribution (Core Novelty)
+
+> Quantified, for the first time on TCGA BRCA histological classification, how much each omics layer contributes to distinguishing IDC from ILC:
+> - **mRNA Expression: 54.5%** of classification signal
+> - **Protein (RPPA): 39.0%**
+> - DNA Methylation: 6.0%
+> - Copy Number Variation: 0.5%
+
+### C4. Biological Validation
+
+> The top feature is **E-Cadherin (pp_E.Cadherin)**, a protein whose loss is the **defining hallmark of ILC** in clinical pathology. The #2 feature is **CDH1 methylation (mu_CDH1)**, which silences the E-cadherin gene. This independently validates both the model and the SHAP attribution framework.
+
+### C5. Late Fusion Outperforms Early Fusion
+
+> Training separate per-omics models and averaging predictions (soft vote) outperforms concatenated feature-space Stacking (F1: 0.925 vs 0.900), demonstrating that per-omics models preserve layer-specific discriminative patterns.
+
+### C6. Statistical Honesty
+
+> Pairwise Wilcoxon signed-rank tests show no statistically significant differences between top models at p<0.05 with 5 CV folds. We report this transparently rather than over-claiming superiority -- demonstrating methodological maturity.
+
+---
+
+## Methodology
+
+### Pipeline Architecture
 
 ```
-       ╔══════════════════════════════════════════════════════════════════╗
-     ║   705 Patients  ·  1,837 Features  ·  4 Omics Layers  ·  3 Targets   ║
-       ╚══════════════════════════════════════════════════════════════════╝
+                    TCGA BRCA Multi-Omics Data
+                    (705 patients × 1,837 features)
+                              │
+                    ┌─────────▼──────────┐
+                    │ Content-Based      │
+                    │ Deduplication      │
+                    │ (1,941 → 1,837)   │
+                    └─────────┬──────────┘
+                              │
+             ┌────────────────▼─────────────────┐
+             │   3-STAGE FEATURE SELECTION       │
+             │                                   │
+             │  Stage 1: Variance Threshold      │
+             │  (1,837 → 1,837)                  │
+             │                                   │
+             │  Stage 2: ANOVA + MI per omics    │
+             │  (1,837 → 472)                    │
+             │                                   │
+             │  Stage 3: RF + XGB Consensus      │
+             │  (472 → 75)                       │
+             └────────────────┬─────────────────┘
+                              │
+          ┌───────────────────▼───────────────────┐
+          │     CLASSIFICATION (SMOTE-inside-CV)  │
+          │                                       │
+          │  5 Baselines: LR, SVM, KNN, NB, RF   │
+          │  2 Tuned: XGBoost, LightGBM           │
+          │  1 Ensemble: Stacking (RF+XGB+LGBM)   │
+          └───────────────────┬───────────────────┘
+                              │
+              ┌───────────────▼────────────────┐
+              │      EXPLAINABILITY (SHAP)     │
+              │                                │
+              │  Global Beeswarm (top 20)      │
+              │  Cross-Omics Attribution (%)   │
+              │  Per-Class Analysis (IDC/ILC)  │
+              │  Patient-Level Waterfall       │
+              │  Dependence Plot (E-Cadherin)  │
+              └───────────────┬────────────────┘
+                              │
+              ┌───────────────▼────────────────┐
+              │     FUSION COMPARISON          │
+              │                                │
+              │  Early: Concat → Stacking      │
+              │  Late:  Per-omics → Soft Vote  │
+              └───────────────┬────────────────┘
+                              │
+              ┌───────────────▼────────────────┐
+              │     ADVANCED ANALYSES          │
+              │                                │
+              │  Statistical Significance      │
+              │  Omics Ablation Study          │
+              │  Learning Curves               │
+              │  Precision-Recall Curves       │
+              └────────────────────────────────┘
 ```
 
----
+### 3-Stage Consensus Feature Selection
 
-</div>
+The feature selection funnel is the first contribution of this thesis. By requiring **agreement between multiple methods**, we eliminate the bias inherent in any single feature selection approach.
 
-## 📋 Table of Contents
+| Stage | Method | Input | Output | Rationale |
+|:------|:-------|:------|:-------|:----------|
+| **1** | Variance Threshold (0.01) | 1,837 | 1,837 | Remove near-zero variance (all features passed) |
+| **2** | ANOVA F-test + Mutual Information | 1,837 | 472 | Per-omics top-75 by each method, UNION selection |
+| **3** | RF + XGBoost Consensus | 472 | **75** | Average tree-based importances, keep top-75 |
 
-<details>
-<summary>Click to expand</summary>
+<p align="center">
+  <img src="outputs/figures/fig_01_funnel.png" width="600" alt="Feature Funnel"/>
+</p>
 
-- [🔬 Overview](#-overview)
-- [📊 Dataset](#-dataset)
-- [⚙️ Methodology](#️-methodology)
-- [🏆 Baseline Results](#-baseline-results)
-- [📁 Project Structure](#-project-structure)
-- [🚀 Quick Start](#-quick-start)
-- [🗺️ Roadmap](#️-roadmap)
-- [🔄 Reproducibility](#-reproducibility)
-- [📜 License](#-license)
+The top 5 consensus features are biologically meaningful:
 
-</details>
+| Rank | Feature | Omics Layer | Biological Role |
+|:-----|:--------|:------------|:----------------|
+| 1 | `pp_E.Cadherin` | Protein | E-cadherin loss = hallmark of ILC |
+| 2 | `mu_CDH1` | Methylation | CDH1 methylation silences E-cadherin |
+| 3 | `rs_CIDEA` | mRNA | Cell death inducing factor |
+| 4 | `pp_AR` | Protein | Androgen receptor (differs IDC/ILC) |
+| 5 | `rs_SOX10` | mRNA | Neural crest TF, basal-like marker |
 
----
+<p align="center">
+  <img src="outputs/figures/fig_03_consensus_features.png" width="600" alt="Top 20 Features"/>
+  <br/><em>Top 20 consensus features colored by omics layer</em>
+</p>
 
-## 🔬 Overview
+### SMOTE-Inside-CV (Preventing Data Leakage)
 
-High-dimensional multi-omics data holds immense promise for **precision oncology**, yet the sheer number of features (1,800+ molecular markers) introduces noise, redundancy, and the curse of dimensionality.
+A critical methodological contribution. Most published multi-omics papers apply SMOTE **before** the train/test split, which creates synthetic minority samples that leak information across folds.
 
-This thesis tackles the challenge through a **three-stage pipeline**:
+```python
+# ❌ WRONG (data leakage) -- common in published papers
+smote = SMOTE()
+X_resampled, y_resampled = smote.fit_resample(X, y)  # Leaks!
+cross_val_score(model, X_resampled, y_resampled, cv=5)
 
-<table>
-<tr>
-<td width="33%" align="center">
-
-### 🎯 Stage 1
-**Baseline Benchmarking**
-
-Evaluate RF, SVM & XGBoost on the full feature set with leakage-free cross-validation
-
-</td>
-<td width="33%" align="center">
-
-### ⚡ Stage 2
-**DC-CRO Feature Selection**
-
-Discover compact, high-performance feature subsets via metaheuristic optimization
-
-</td>
-<td width="33%" align="center">
-
-### 🔍 Stage 3
-**Explainable AI**
-
-SHAP-based interpretation for biologically meaningful clinical insights
-
-</td>
-</tr>
-</table>
-
----
-
-## 📊 Dataset
-
-<table>
-<tr><td>
-
-| | Detail |
-|:---|:---|
-| 🏥 **Source** | TCGA Breast Cancer (BRCA) Cohort |
-| 👥 **Samples** | 705 patients |
-| 🔬 **Omics Layers** | RNA-Seq · CNV · Somatic Mutations · Protein (RPPA) |
-| 📐 **Raw Features** | 1,936 molecular features |
-| ✂️ **After Dedup** | **1,837** unique features (99 content-duplicate CNV columns removed) |
-
-</td><td>
-
-**Clinical Targets:**
-
-| Target | Type | Classes |
-|:---|:---|:---|
-| `ER.Status` | Binary | Positive / Negative |
-| `HER2.Final.Status` | Binary | Positive / Negative |
-| `histological.type` | Multi-class | IDC / ILC / Other |
-
-</td></tr>
-</table>
-
-> 📂 Raw data: `data/brca_data_w_subtypes.csv` — integrates all four omics layers with clinical annotations.
-
----
-
-## ⚙️ Methodology
-
-### Preprocessing Pipeline
-
-```
-                    ┌─────────────────────────────────────────────────────────┐
-                    │              PREPROCESSING PIPELINE                     │
-                    └─────────────────────────────────────────────────────────┘
-
-    ┌──────────┐     ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-    │ Raw CSV  │────▶│  Content    │────▶│   Target     │────▶│  80 / 20    │
-    │ (1,936)  │     │  Dedup      │     │  Encoding    │     │  Stratified │
-    └──────────┘     │  (→ 1,837)  │     └──────────────┘     │  Split      │
-                     └─────────────┘                          └──────┬──────┘
-                                                                     │
-                                                    ┌────────────────┼────────────────┐
-                                                    ▼                                 ▼
-                                            ┌──────────────┐                 ┌──────────────┐
-                                            │  Train Set   │                 │  Test Set    │
-                                            └──────┬───────┘                 │  (held out)  │
-                                                   │                         └──────────────┘
-                                                   ▼
-                                            ┌──────────────┐
-                                            │ StandardScale│
-                                            │ (fit on train│
-                                            │  only)       │
-                                            └──────┬───────┘
-                                                   │
-                                                   ▼
-                                            ┌──────────────┐
-                                            │    SMOTE     │
-                                            │ (per CV fold │
-                                            │  via ImbPipe)│
-                                            └──────────────┘
+# ✅ CORRECT (this thesis) -- SMOTE inside each fold
+from imblearn.pipeline import Pipeline as ImbPipeline
+pipeline = ImbPipeline([
+    ("scaler", StandardScaler()),
+    ("smote", SMOTE(random_state=42)),
+    ("clf", LGBMClassifier()),
+])
+cross_val_score(pipeline, X, y, cv=StratifiedKFold(5))
 ```
 
-### 🛡️ Scientific Rigor Guarantees
+### Cross-Omics SHAP Attribution
 
-| Principle | Implementation |
-|:---|:---|
-| 🚫 **No Data Leakage** | Scaling fit exclusively on training data; SMOTE applied inside CV folds via `ImbPipeline` |
-| 📊 **Stratified Splitting** | Class proportions preserved in both train and test sets |
-| 🧹 **Content-Based Dedup** | Removes columns with identical *values* (not just names) — eliminates 99 redundant CNV features from shared chromosomal loci |
-| 🏷️ **Feature Name Tracking** | Column names saved as `.npy` arrays for downstream SHAP explainability |
-| 🔒 **Seed Locking** | Fixed seed (42) across NumPy, Python `random`, and `PYTHONHASHSEED` |
+The core novelty: for each omics layer, we compute the **sum of absolute SHAP values** across all features belonging to that layer, then convert to percentages. This answers: *"Which genomic data type contributes most to the classification?"*
 
-### 🤖 Baseline Classifiers
-
-| Classifier | Configuration | Key Strength |
-|:---|:---|:---|
-| 🌲 **Random Forest** | 100 estimators, parallelized | Robust to noise |
-| 🎯 **SVM** | RBF kernel, probability estimates | Strong on high-dim data |
-| ⚡ **XGBoost** | Logloss metric, parallelized | Best overall performance |
+<p align="center">
+  <img src="outputs/figures/fig_08_omics_attribution.png" width="650" alt="Omics Attribution"/>
+  <br/><em>Cross-Omics SHAP Attribution per Histological Subtype</em>
+</p>
 
 ---
 
-## 🏆 Baseline Results
+## Results & Analysis
 
-<div align="center">
+### 8-Model Comparison
 
-> 📈 *Stratified 5-Fold Cross-Validation with per-fold SMOTE · Values: **mean ± std***
+All models evaluated using **Stratified 5-Fold Cross-Validation** with **SMOTE-inside-CV** pipeline.
 
-</div>
+| Model | F1-Macro | AUC-ROC | MCC | Accuracy |
+|:------|:---------|:--------|:----|:---------|
+| KNN (k=5) | 0.781 ± 0.039 | 0.921 | 0.613 | 83.3% |
+| Naive Bayes | 0.768 ± 0.024 | 0.916 | 0.572 | 83.0% |
+| Logistic Regression | 0.846 ± 0.033 | 0.925 | 0.697 | 90.1% |
+| SVM (RBF) | 0.892 ± 0.023 | 0.958 | 0.788 | 93.8% |
+| Random Forest | 0.893 ± 0.024 | 0.957 | 0.790 | 93.8% |
+| Stacking Ensemble | 0.900 ± 0.013 | 0.963 | 0.804 | 94.2% |
+| XGBoost (tuned) | 0.905 ± 0.018 | 0.965 | 0.813 | 94.3% |
+| **LightGBM (tuned)** | **0.917 ± 0.013** | **0.965** | **0.836** | **95.0%** |
 
-### 🔹 ER Status — *Binary Classification*
+<p align="center">
+  <img src="outputs/figures/fig_05_model_comparison.png" width="600" alt="Model Comparison"/>
+</p>
 
-<table>
-<tr>
-<th>Model</th>
-<th>Accuracy</th>
-<th>F1 (Weighted)</th>
-<th>F1 (Macro)</th>
-<th>ROC-AUC</th>
-<th>MCC</th>
-</tr>
-<tr>
-<td>⚡ <b>XGBoost</b></td>
-<td><b>93.16 ± 2.98</b></td>
-<td><b>93.23 ± 2.85</b></td>
-<td><b>90.97 ± 3.64</b></td>
-<td>95.47 ± 2.82</td>
-<td><b>0.822 ± 0.070</b></td>
-</tr>
-<tr>
-<td>🌲 Random Forest</td>
-<td>92.94 ± 2.43</td>
-<td>92.83 ± 2.42</td>
-<td>90.22 ± 3.20</td>
-<td><b>95.69 ± 3.18</b></td>
-<td>0.808 ± 0.065</td>
-</tr>
-<tr>
-<td>🎯 SVM</td>
-<td>91.57 ± 1.54</td>
-<td>91.21 ± 1.78</td>
-<td>87.76 ± 2.60</td>
-<td>95.23 ± 3.51</td>
-<td>0.769 ± 0.043</td>
-</tr>
-</table>
+<p align="center">
+  <img src="outputs/figures/fig_04_roc_all.png" width="550" alt="ROC Curves"/>
+  <br/><em>ROC Curves -- All models achieve AUC > 0.91</em>
+</p>
 
-### 🔹 HER2 Final Status — *Binary Classification*
+### Statistical Significance
 
-<table>
-<tr>
-<th>Model</th>
-<th>Accuracy</th>
-<th>F1 (Weighted)</th>
-<th>F1 (Macro)</th>
-<th>ROC-AUC</th>
-<th>MCC</th>
-</tr>
-<tr>
-<td>⚡ <b>XGBoost</b></td>
-<td><b>92.86 ± 2.33</b></td>
-<td><b>92.47 ± 2.73</b></td>
-<td><b>85.32 ± 5.65</b></td>
-<td><b>92.47 ± 5.67</b></td>
-<td><b>0.717 ± 0.106</b></td>
-</tr>
-<tr>
-<td>🌲 Random Forest</td>
-<td>90.56 ± 2.93</td>
-<td>88.95 ± 4.16</td>
-<td>76.79 ± 9.50</td>
-<td>89.04 ± 4.93</td>
-<td>0.592 ± 0.152</td>
-</tr>
-<tr>
-<td>🎯 SVM</td>
-<td>86.87 ± 2.77</td>
-<td>82.53 ± 4.65</td>
-<td>60.57 ± 11.45</td>
-<td>88.89 ± 5.33</td>
-<td>0.330 ± 0.217</td>
-</tr>
-</table>
+Pairwise **Wilcoxon signed-rank tests** on per-fold F1 scores. With only 5 CV folds, no statistically significant differences exist between top models at p<0.05 -- an honest finding that strengthens the work by avoiding over-claiming.
 
-### 🔹 Histological Type — *Multi-class Classification*
+<p align="center">
+  <img src="outputs/figures/fig_13_significance_heatmap.png" width="500" alt="Significance"/>
+  <br/><em>Pairwise Wilcoxon p-values (lower triangular)</em>
+</p>
 
-<table>
-<tr>
-<th>Model</th>
-<th>Accuracy</th>
-<th>F1 (Weighted)</th>
-<th>F1 (Macro)</th>
-<th>ROC-AUC</th>
-<th>MCC</th>
-</tr>
-<tr>
-<td>⚡ <b>XGBoost</b></td>
-<td><b>91.67 ± 1.63</b></td>
-<td><b>91.64 ± 1.46</b></td>
-<td><b>86.16 ± 2.14</b></td>
-<td><b>93.77 ± 2.49</b></td>
-<td><b>0.726 ± 0.043</b></td>
-</tr>
-<tr>
-<td>🎯 SVM</td>
-<td>89.36 ± 3.30</td>
-<td>88.52 ± 3.58</td>
-<td>79.78 ± 6.35</td>
-<td>90.56 ± 5.09</td>
-<td>0.615 ± 0.129</td>
-</tr>
-<tr>
-<td>🌲 Random Forest</td>
-<td>88.30 ± 2.18</td>
-<td>87.44 ± 2.29</td>
-<td>77.99 ± 3.99</td>
-<td>91.40 ± 4.24</td>
-<td>0.578 ± 0.083</td>
-</tr>
-</table>
+<p align="center">
+  <img src="outputs/figures/fig_14_cv_stability.png" width="600" alt="CV Stability"/>
+  <br/><em>Per-fold F1 scores -- LightGBM and XGBoost show tightest interquartile ranges</em>
+</p>
 
-<br/>
+### Omics Ablation Study
 
-<div align="center">
+*"What happens if you remove each omics layer?"* -- A question every thesis examiner will ask.
 
-### 💡 Key Findings
+#### Leave-One-Layer-Out
 
-</div>
+| Configuration | F1-Macro | Drop from Full |
+|:--------------|:---------|:---------------|
+| **All Omics (baseline)** | **0.894** | -- |
+| Remove Protein (26 feats) | 0.864 | **−0.030 (largest)** |
+| Remove mRNA (45 feats) | 0.881 | −0.013 |
+| Remove Methylation (1 feat) | 0.881 | −0.013 |
+| Remove CNV (3 feats) | 0.889 | −0.005 (smallest) |
 
-> **XGBoost dominates** across all three clinical targets, achieving the highest accuracy, F1, and MCC scores consistently. Notably:
-> - **ER Status** is the easiest target (93.2% accuracy) — strong biological signal from hormone receptor expression.
-> - **HER2 Status** shows the most room for improvement (MCC: 0.717) — class imbalance makes this a prime candidate for **DC-CRO feature selection**.
-> - **Histological Type** benefits from multi-class handling (91.7% accuracy) — XGBoost's gradient-based optimization handles the 3-class problem well.
+#### Single-Omics Performance
+
+| Only This Layer | F1-Macro | Features |
+|:----------------|:---------|:---------|
+| **Only Protein** | **0.862** | 26 |
+| Only Methylation | 0.795 | 1 |
+| Only mRNA | 0.776 | 45 |
+| Only CNV | 0.592 | 3 |
+
+> **Key insight:** Removing Protein causes the largest drop, and Protein alone achieves the highest single-omics F1 -- independently confirming the SHAP attribution finding.
+
+<p align="center">
+  <img src="outputs/figures/fig_15_ablation_study.png" width="650" alt="Ablation"/>
+  <br/><em>Green = full model, Red = leave-one-out, Blue = single-omics</em>
+</p>
+
+### SHAP Explainability
+
+#### Global Feature Importance
+
+<p align="center">
+  <img src="outputs/figures/fig_07_shap_beeswarm.png" width="600" alt="SHAP Beeswarm"/>
+  <br/><em>Global SHAP beeswarm -- E-Cadherin dominates, followed by CDH1 methylation</em>
+</p>
+
+#### Per-Class SHAP Analysis
+
+<p align="center">
+  <img src="outputs/figures/fig_09_shap_IDC.png" width="48%" alt="SHAP IDC"/>
+  <img src="outputs/figures/fig_09_shap_ILC.png" width="48%" alt="SHAP ILC"/>
+  <br/><em>Left: IDC-driving features | Right: ILC-driving features</em>
+</p>
+
+#### SHAP Dependence -- E-Cadherin
+
+The SHAP dependence plot reveals a **clear threshold effect**: when E-Cadherin expression drops below ~−0.5 (standardized), the model strongly predicts ILC -- consistent with the known E-cadherin loss mechanism in lobular carcinoma.
+
+<p align="center">
+  <img src="outputs/figures/fig_17_shap_dependence_ecadherin.png" width="550" alt="SHAP Dependence"/>
+</p>
+
+#### Patient-Level Waterfall Explanations
+
+<p align="center">
+  <img src="outputs/figures/fig_10_waterfall_p1.png" width="48%" alt="Waterfall IDC"/>
+  <img src="outputs/figures/fig_10_waterfall_p2.png" width="48%" alt="Waterfall ILC"/>
+  <br/><em>Left: IDC patient prediction | Right: ILC patient -- E-Cadherin drives +3.23 toward ILC</em>
+</p>
+
+### Fusion Strategy Comparison
+
+| Strategy | F1-Macro | AUC-ROC | Method |
+|:---------|:---------|:--------|:-------|
+| Early Fusion | 0.900 ± 0.013 | 0.963 | Concatenate all omics → Stacking |
+| **Late Fusion** | **0.925** | **0.984** | Per-omics XGBoost → soft vote |
+
+<p align="center">
+  <img src="outputs/figures/fig_11_fusion_comparison.png" width="550" alt="Fusion"/>
+  <img src="outputs/figures/fig_12_confusion_late.png" width="380" alt="Late Fusion CM"/>
+</p>
+
+### Learning Curve & Additional Analyses
+
+<p align="center">
+  <img src="outputs/figures/fig_18_learning_curve.png" width="48%" alt="Learning Curve"/>
+  <img src="outputs/figures/fig_20_precision_recall.png" width="48%" alt="PR Curves"/>
+  <br/><em>Left: Learning curve (gap narrowing but not closed) | Right: Precision-Recall curves (XGBoost AP=0.912)</em>
+</p>
+
+<p align="center">
+  <img src="outputs/figures/fig_19_feature_composition.png" width="45%" alt="Composition"/>
+  <img src="outputs/figures/fig_16_correlation_heatmap.png" width="48%" alt="Correlation"/>
+  <br/><em>Left: Omics composition of 75 features | Right: Feature correlation matrix (low redundancy)</em>
+</p>
 
 ---
 
-## 📁 Project Structure
+## Figures Gallery
+
+| # | Figure | Description |
+|:--|:-------|:------------|
+| 01 | `fig_01_funnel.png` | Feature reduction funnel (1,837 → 75) |
+| 02 | `fig_02_label_dist.png` | Class distribution (IDC vs ILC) |
+| 03 | `fig_03_consensus_features.png` | Top 20 consensus features by omics layer |
+| 04 | `fig_04_roc_all.png` | ROC curves for all models |
+| 05 | `fig_05_model_comparison.png` | F1-Macro comparison (8 models) |
+| 06 | `fig_06_confusion_best.png` | Confusion matrix -- best model |
+| 07 | `fig_07_shap_beeswarm.png` | Global SHAP beeswarm (top 20) |
+| 08 | `fig_08_omics_attribution.png` | Cross-omics SHAP attribution |
+| 09 | `fig_09_shap_IDC/ILC.png` | Per-class SHAP summaries |
+| 10 | `fig_10_waterfall_p1/p2.png` | Patient-level SHAP waterfall |
+| 11 | `fig_11_fusion_comparison.png` | Early vs Late fusion |
+| 12 | `fig_12_confusion_late.png` | Late fusion confusion matrix |
+| 13 | `fig_13_significance_heatmap.png` | Wilcoxon p-value heatmap |
+| 14 | `fig_14_cv_stability.png` | Per-fold CV stability box plot |
+| 15 | `fig_15_ablation_study.png` | Omics ablation study |
+| 16 | `fig_16_correlation_heatmap.png` | Feature correlation matrix |
+| 17 | `fig_17_shap_dependence.png` | SHAP dependence -- E-Cadherin |
+| 18 | `fig_18_learning_curve.png` | Learning curve analysis |
+| 19 | `fig_19_feature_composition.png` | Omics composition of final features |
+| 20 | `fig_20_precision_recall.png` | Precision-Recall curves |
+
+---
+
+## Project Structure
 
 ```
-🧬 Multi Omics Cancer - CRO xAI/
+Multi Omics Cancer/
 │
-├── 📂 data/
-│   └── brca_data_w_subtypes.csv          # Raw TCGA BRCA multi-omics dataset
+├── data/
+│   └── brca_data_w_subtypes.csv            # TCGA BRCA multi-omics dataset
 │
-├── 📂 src/
-│   ├── __init__.py                       # Package initializer
-│   ├── preprocess.py                     # Data loading, deduplication, encoding, SMOTE
-│   ├── baseline.py                       # Stratified CV evaluation with ImbPipeline
-│   └── utils.py                          # Reproducibility (seed locking)
+├── src/
+│   ├── config.py                            # Global constants & hyperparameters
+│   ├── utils.py                             # Seed locking, formatted printing
+│   ├── data_pipeline.py                     # Data loading, dedup, cleaning
+│   ├── feature_selection.py                 # 3-stage consensus funnel
+│   ├── baseline_models.py                   # 5 baselines with SMOTE-inside-CV
+│   ├── advanced_models.py                   # XGBoost/LightGBM tuning + Stacking
+│   ├── shap_analysis.py                     # Cross-omics SHAP attribution
+│   ├── fusion_comparison.py                 # Early vs Late fusion
+│   └── visualization.py                     # Publication-quality figures
 │
-├── 📂 outputs/
-│   ├── baseline_metrics/                 # Per-target CSV results (pivoted)
-│   │   ├── ER.Status_baseline.csv
-│   │   ├── HER2.Final.Status_baseline.csv
-│   │   └── histological.type_baseline.csv
-│   ├── preprocessed/                     # .npy arrays (train/test, feature names)
-│   └── figures/                          # Plots (populated in later weeks)
+├── outputs/
+│   ├── figures/                             # 22 publication-quality PNG figures
+│   ├── results/                             # 10 CSV result tables
+│   ├── models/                              # Saved trained models (.joblib)
+│   └── preprocessed/                        # Feature lists & omics membership
 │
-├── 📂 notebooks/                         # Jupyter notebooks for exploration
-├── 📂 reports/                           # Generated thesis figures & reports
-│
-├── 🚀 run_week1.py                      # Master script — full Week 1 pipeline
-├── 📋 requirements.txt                  # Python dependencies
-├── 📋 .gitignore
-└── 📋 README.md
+├── run_pipeline.py                          # Master script -- runs Day 1-5
+├── advanced_analysis.py                     # Statistical tests & ablation study
+├── requirements.txt                         # Python dependencies
+└── README.md                                # This file
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)
-![pip](https://img.shields.io/badge/pip-latest-green?logo=pypi&logoColor=white)
+- Python 3.10+
+- ~2GB RAM
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/peashdasrudra/Multi-Omics-Cancer-Classification---CRO-xAI.git
-cd Multi-Omics-Cancer-Classification---CRO-xAI
-
-# Create & activate virtual environment
-python -m venv .venv
-.venv\Scripts\activate           # Windows
-# source .venv/bin/activate      # Linux/macOS
+git clone https://github.com/peashdasrudra/Multi-Omics-Cancer-Classification-CRO-xAI.git
+cd Multi-Omics-Cancer-Classification-CRO-xAI
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### Run the Pipeline
+### Run Everything
 
 ```bash
-python run_week1.py
+# Full pipeline: Data → Features → Models → SHAP → Fusion (~2 min)
+python run_pipeline.py
+
+# Advanced analyses: Statistics, Ablation, Learning Curves (~1 min)
+python advanced_analysis.py
 ```
 
-<details>
-<summary>📝 <b>What does it do?</b> (click to expand)</summary>
+### Reproduce Specific Stages
 
-<br/>
+```python
+from src.data_pipeline import run_data_pipeline
+from src.feature_selection import run_feature_selection
+from src.shap_analysis import run_shap_analysis
 
-1. 📥 Loads and deduplicates the raw multi-omics dataset (1,936 → 1,837 features)
-2. For each of the 3 clinical targets:
-   - 🏷️ Encodes labels and splits data (80/20 stratified)
-   - 📏 Scales features (StandardScaler, fit on train only)
-   - 💾 Saves pre-SMOTE data for leakage-free CV evaluation
-   - ⚖️ Applies SMOTE and saves resampled data for future DC-CRO
-   - 🤖 Runs baseline evaluation (RF, SVM, XGBoost) with Stratified 5-Fold CV
-   - 📊 Exports metrics to CSV
+# Load and preprocess data
+X, y, label_encoder, omics_groups, _ = run_data_pipeline()
 
-</details>
+# Feature selection
+X_final, features, funnel, importance = run_feature_selection(X, y, omics_groups)
 
-### Dependencies
-
-| Package | Purpose |
-|:---|:---|
-| `numpy` · `pandas` | Data manipulation & analysis |
-| `scikit-learn` | ML models, preprocessing, evaluation metrics |
-| `imbalanced-learn` | SMOTE oversampling & ImbPipeline |
-| `xgboost` | Gradient boosted tree classifier |
-| `matplotlib` · `seaborn` | Visualization & plotting |
-| `joblib` | Model serialization & persistence |
+# SHAP analysis
+attr_df, model, scaler = run_shap_analysis(X_final, y, label_encoder)
+```
 
 ---
 
-## 🗺️ Roadmap
+## Generated Outputs
 
-<table>
-<tr>
-<th>Week</th>
-<th>Milestone</th>
-<th>Status</th>
-</tr>
-<tr>
-<td align="center"><b>1</b></td>
-<td>📊 Data preprocessing, content-based deduplication, baseline evaluation (RF, SVM, XGBoost)</td>
-<td align="center">✅ <b>Complete</b></td>
-</tr>
-<tr>
-<td align="center"><b>2</b></td>
-<td>⚡ DC-CRO metaheuristic skeleton & feature selection engine</td>
-<td align="center">🔄 In Progress</td>
-</tr>
-<tr>
-<td align="center"><b>3</b></td>
-<td>🔗 DC-CRO integration with classifiers & hyperparameter tuning</td>
-<td align="center">📅 Planned</td>
-</tr>
-<tr>
-<td align="center"><b>4</b></td>
-<td>🔍 SHAP-based explainability analysis & feature importance</td>
-<td align="center">📅 Planned</td>
-</tr>
-<tr>
-<td align="center"><b>5</b></td>
-<td>📝 Final evaluation, comparison tables, thesis write-up & figures</td>
-<td align="center">📅 Planned</td>
-</tr>
-</table>
+### Result Tables (10 CSVs)
+
+| File | Description |
+|:-----|:------------|
+| `results_all_models.csv` | 8 models × 6 metrics (formatted mean ± std) |
+| `results_all_models_numeric.csv` | Raw numeric values for plotting |
+| `results_baseline.csv` | 5 baseline model results |
+| `consensus_importances.csv` | RF + XGB feature importance rankings |
+| `omics_attribution.csv` | Cross-omics SHAP attribution (%) |
+| `fusion_comparison.csv` | Early vs Late fusion results |
+| `per_fold_f1_scores.csv` | Per-fold F1 scores (for transparency) |
+| `statistical_significance.csv` | Pairwise Wilcoxon p-values |
+| `ablation_study.csv` | Omics ablation study results |
+| `feature_final.csv` | Final 75 features with omics membership |
+
+### Saved Models
+
+| File | Model |
+|:-----|:------|
+| `xgb_tuned.joblib` | Best XGBoost (GridSearchCV) |
+| `lgbm_tuned.joblib` | Best LightGBM (GridSearchCV) |
+| `stacking.joblib` | Stacking Ensemble |
+| `xgb_best_params.joblib` | XGBoost optimal hyperparameters |
+| `lgbm_best_params.joblib` | LightGBM optimal hyperparameters |
 
 ---
 
-## 🔄 Reproducibility
+## Limitations & Future Work
 
-All experiments use a **fixed random seed (`42`)** locked across:
+### Current Limitations
 
-- 🔢 **NumPy** — `np.random.seed(42)`
-- 🐍 **Python** — `random.seed(42)`
-- #️⃣ **Hash Seed** — `PYTHONHASHSEED=42`
+1. **Sample size (n=705):** Limits statistical power for significance tests (Wilcoxon with 5 folds)
+2. **Binary classification only:** IDC vs ILC; PAM50 molecular subtypes not available in this dataset
+3. **No external validation:** Results on TCGA only; cross-cohort generalization not tested
+4. **Learning curve gap:** Training score ~1.0 suggests slight overfitting; more data could help
 
-Results are **100% reproducible** given the same environment, dataset, and library versions.
+### Future Directions
+
+1. **External validation** on METABRIC or GEO breast cancer cohorts
+2. **Multi-class extension** with PAM50 molecular subtypes (LumA/LumB/HER2/Basal)
+3. **Deep learning fusion** (multi-modal autoencoders, graph neural networks)
+4. **Temporal analysis** using survival data (Cox-PH with SHAP)
+5. **DC-CRO framework** -- formulate feature selection as NP-hard Knapsack, solve with Chemical Reaction Optimization
 
 ---
 
-## 📜 License
+## Requirements
 
-This project is part of an academic thesis. All rights reserved.
+```
+numpy
+pandas
+scikit-learn
+imbalanced-learn
+matplotlib
+seaborn
+xgboost
+lightgbm
+shap
+boruta
+joblib
+```
 
 ---
 
-<div align="center">
+## References
 
-<br/>
+1. Lundberg, S. M., & Lee, S. I. (2017). A unified approach to interpreting model predictions. *NeurIPS*.
+2. Chawla, N. V., et al. (2002). SMOTE: Synthetic Minority Over-sampling Technique. *JAIR*.
+3. The Cancer Genome Atlas Network. (2012). Comprehensive molecular portraits of human breast tumours. *Nature*.
+4. Ciriello, G., et al. (2015). Comprehensive molecular portraits of invasive lobular breast cancer. *Cell*.
+5. Chen, T., & Guestrin, C. (2016). XGBoost: A scalable tree boosting system. *KDD*.
+6. Ke, G., et al. (2017). LightGBM: A highly efficient gradient boosting decision tree. *NeurIPS*.
 
-**Department of Computer Science & Engineering**
+---
 
-**Northern University of Business & Technology Khulna**
-
-<br/>
-
-*Made with 🧬 for precision oncology research*
-
-</div>
+<p align="center">
+  <em>Built for MSc Thesis -- Explainable AI for Multi-Omics Cancer Classification</em>
+</p>
