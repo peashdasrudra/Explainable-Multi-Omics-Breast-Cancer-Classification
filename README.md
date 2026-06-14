@@ -326,6 +326,8 @@ All models evaluated using **Stratified 5-Fold CV** with **SMOTE-inside-CV** pip
   <img src="outputs/figures/fig_07_shap_beeswarm.png" width="700" alt="SHAP Beeswarm"/>
 <br/>
 <sub>Global SHAP Feature Importance — E-Cadherin protein dominates IDC vs ILC classification</sub>
+  <br/>
+  <br/>
 <img src="outputs/figures/fig_08_omics_attribution.png" width="650" alt="Omics Attribution"/>
 <br/>
 <sub>Cross-Omics SHAP Attribution — mRNA and Protein dominate IDC vs ILC classification</sub>
