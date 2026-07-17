@@ -9,3 +9,5 @@ lightgbm
 shap
 boruta
 joblib
+scipy
+gseapy

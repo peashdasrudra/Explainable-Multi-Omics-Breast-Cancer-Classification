@@ -63,18 +63,24 @@ STAGE2_K_PER_OMICS = 75
 STAGE3_TOP_N = 75
 
 # ─────────────────────────── Model Hyperparameters ─────────────────────
-# XGBoost grid search
+# XGBoost parameter distribution for RandomizedSearchCV
 XGB_PARAM_GRID = {
-    "clf__n_estimators": [100, 200],
-    "clf__max_depth": [3, 5, 7],
-    "clf__learning_rate": [0.05, 0.1],
+    "clf__n_estimators": [100, 150, 200, 250, 300],
+    "clf__max_depth": [3, 4, 5, 6, 7, 8],
+    "clf__learning_rate": [0.01, 0.05, 0.1, 0.15, 0.2],
+    "clf__subsample": [0.6, 0.7, 0.8, 0.9, 1.0],
+    "clf__colsample_bytree": [0.6, 0.7, 0.8, 0.9, 1.0],
+    "clf__min_child_weight": [1, 2, 3, 5, 7],
 }
 
-# LightGBM grid search
+# LightGBM parameter distribution for RandomizedSearchCV
 LGBM_PARAM_GRID = {
-    "clf__n_estimators": [100, 200],
-    "clf__max_depth": [3, 5, 7],
-    "clf__learning_rate": [0.05, 0.1],
+    "clf__n_estimators": [100, 150, 200, 250, 300],
+    "clf__max_depth": [3, 4, 5, 6, 7, 8],
+    "clf__learning_rate": [0.01, 0.05, 0.1, 0.15, 0.2],
+    "clf__subsample": [0.6, 0.7, 0.8, 0.9, 1.0],
+    "clf__colsample_bytree": [0.6, 0.7, 0.8, 0.9, 1.0],
+    "clf__min_child_weight": [1, 2, 3, 5, 7],
 }
 
 # ─────────────────────────── Visualization ─────────────────────────────

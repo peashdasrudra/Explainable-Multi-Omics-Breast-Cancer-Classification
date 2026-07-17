@@ -1,4 +1,4 @@
-# Python
+# ──────────────────── Python ────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
@@ -7,33 +7,38 @@ dist/
 build/
 *.egg
 
-# Virtual environments
+# ──────────────────── Virtual Environments ──────
 venv/
 env/
 .venv/
+.env/
 
-# IDE
+# ──────────────────── IDE / Editor ──────────────
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS
+# ──────────────────── OS Files ──────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Large data files (keep in data/ but exclude from git if too large)
+# ──────────────────── Data (uncomment if too large for GitHub) ──────
 # data/*.csv
 
-# Model files (large binaries)
+# ──────────────────── Model Binaries ────────────
 outputs/models/*.joblib
 
-# Preprocessed numpy files
+# ──────────────────── Preprocessed Cache ────────
 outputs/preprocessed/*.npy
+outputs/preprocessed/*.csv
 
-# Jupyter
+# ──────────────────── Jupyter ───────────────────
 .ipynb_checkpoints/
+*.ipynb
 
-# Gemini
+# ──────────────────── Gemini / Agents ───────────
 .gemini/
+.agents/

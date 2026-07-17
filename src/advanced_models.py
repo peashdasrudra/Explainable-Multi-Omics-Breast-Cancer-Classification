@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import os
 import joblib
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import StackingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
@@ -30,58 +30,58 @@ from src.utils import print_step
 
 def tune_xgboost(X, y, skf):
     """
-    GridSearchCV for XGBoost with SMOTE-inside-CV pipeline.
-    Grid: n_estimators=[100,200], max_depth=[3,5,7], learning_rate=[0.05,0.1]
+    RandomizedSearchCV for XGBoost with SMOTE-inside-CV pipeline.
+    Searches 50 random configurations from the expanded parameter space.
     """
-    print_step(18, "Tuning XGBoost (GridSearchCV)...")
+    print_step(18, "Tuning XGBoost (RandomizedSearchCV - 50 iterations)...")
 
     pipeline = ImbPipeline([
         ("scaler", StandardScaler()),
         ("smote", SMOTE(random_state=RANDOM_STATE)),
         ("clf", XGBClassifier(
-            random_state=RANDOM_STATE, n_jobs=-1,
+            random_state=RANDOM_STATE, n_jobs=1,  # Set n_jobs=1 to avoid deadlock in nested parallelization
             eval_metric="mlogloss", use_label_encoder=False,
             verbosity=0
         )),
     ])
 
-    grid = GridSearchCV(
-        pipeline, XGB_PARAM_GRID, cv=skf,
-        scoring="f1_macro", n_jobs=-1, refit=True
+    search = RandomizedSearchCV(
+        pipeline, XGB_PARAM_GRID, n_iter=50, cv=skf,
+        scoring="f1_macro", n_jobs=-1, refit=True, random_state=RANDOM_STATE
     )
-    grid.fit(X, y)
+    search.fit(X, y)
 
-    print(f"       Best params: {grid.best_params_}")
-    print(f"       Best F1-Macro: {grid.best_score_:.4f}")
+    print(f"       Best params: {search.best_params_}")
+    print(f"       Best F1-Macro: {search.best_score_:.4f}")
 
-    return grid.best_estimator_, grid.best_params_, grid.best_score_
+    return search.best_estimator_, search.best_params_, search.best_score_
 
 
 def tune_lightgbm(X, y, skf):
     """
-    GridSearchCV for LightGBM with SMOTE-inside-CV pipeline.
-    Same grid structure as XGBoost for fair comparison.
+    RandomizedSearchCV for LightGBM with SMOTE-inside-CV pipeline.
+    Searches 50 random configurations from the expanded parameter space.
     """
-    print_step(19, "Tuning LightGBM (GridSearchCV)...")
+    print_step(19, "Tuning LightGBM (RandomizedSearchCV - 50 iterations)...")
 
     pipeline = ImbPipeline([
         ("scaler", StandardScaler()),
         ("smote", SMOTE(random_state=RANDOM_STATE)),
         ("clf", LGBMClassifier(
-            random_state=RANDOM_STATE, n_jobs=-1, verbose=-1
+            random_state=RANDOM_STATE, n_jobs=1, verbose=-1  # Set n_jobs=1 to avoid deadlock in nested parallelization
         )),
     ])
 
-    grid = GridSearchCV(
-        pipeline, LGBM_PARAM_GRID, cv=skf,
-        scoring="f1_macro", n_jobs=-1, refit=True
+    search = RandomizedSearchCV(
+        pipeline, LGBM_PARAM_GRID, n_iter=50, cv=skf,
+        scoring="f1_macro", n_jobs=-1, refit=True, random_state=RANDOM_STATE
     )
-    grid.fit(X, y)
+    search.fit(X, y)
 
-    print(f"       Best params: {grid.best_params_}")
-    print(f"       Best F1-Macro: {grid.best_score_:.4f}")
+    print(f"       Best params: {search.best_params_}")
+    print(f"       Best F1-Macro: {search.best_score_:.4f}")
 
-    return grid.best_estimator_, grid.best_params_, grid.best_score_
+    return search.best_estimator_, search.best_params_, search.best_score_
 
 
 def build_stacking_ensemble(xgb_best_params, lgbm_best_params):

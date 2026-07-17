@@ -1,0 +1,6 @@
+metric,value
+mean_jaccard_top20,0.49578207233379645
+mean_spearman_rho,0.6449696573630719
+ecad_as_rank1,5/5
+ecad_in_top5,5/5
+n_splits,5
