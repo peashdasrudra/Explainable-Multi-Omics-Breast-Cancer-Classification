@@ -617,6 +617,7 @@ Upgraded from 5-fold to **10×3 Repeated Stratified CV** (30 paired observations
 │   └── 📁 preprocessed/                       # Feature lists & omics mapping
 │
 ├── 📁 docs/                                   # ── Documentation & Thesis Materials ──
+│   ├── master_thesis_guide.md                 # Ultimate 1% thesis defense guide
 │   ├── results_analysis.md                    # Full quantitative results analysis
 │   ├── defense_and_beginner_guide.md          # Thesis defense & reviewer Q&A companion
 │   ├── implementation_plan.md                 # 20-day roadmap & publication strategy
@@ -637,7 +638,7 @@ Upgraded from 5-fold to **10×3 Repeated Stratified CV** (30 paired observations
 ## 📖 Documentation
 
 | Document | Description |
-|:---------|:------------|
+| **[Master Thesis Guide](docs/master_thesis_guide.md)** | **Ultimate 1% Prep:** Plain-English analogies, complete workflow, and Q&A defense scripts |
 | **[Results Analysis](docs/results_analysis.md)** | Full quantitative analysis of all 28 figures and 18 result tables |
 | **[Defense & Beginner Guide](docs/defense_and_beginner_guide.md)** | Thesis defense preparation, reviewer Q&A scripts, plain-English explanations |
 | **[Implementation Plan](docs/implementation_plan.md)** | 20-day development roadmap and publication strategy |
