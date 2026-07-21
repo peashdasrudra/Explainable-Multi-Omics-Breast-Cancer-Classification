@@ -1,14 +1,30 @@
 """
-shap_analysis.py -- Day 4: SHAP Analysis -- The Core Novelty.
+shap_analysis.py — Cross-Omics SHAP Attribution Analysis (Core Novelty)
+=========================================================================
+Quantifies the relative contribution of each omics layer (mRNA, CNV,
+Methylation, Protein) to the model's classification of breast cancer
+histological subtypes (IDC vs ILC) using SHAP (SHapley Additive
+exPlanations) values.
 
-Cross-Omics SHAP Attribution: quantify which omics layer (mRNA/CNV/Methylation/Protein)
-drives each class prediction -- clinically meaningful and underexplored.
+Scientific Novelty:
+    Prior SHAP-based explainability work on multi-omics cancer data
+    reports feature-level importance only. This module introduces
+    CROSS-OMICS SHAP ATTRIBUTION: aggregating |SHAP| values by
+    omics layer to produce a percentage breakdown of each layer's
+    contribution per class. This reveals, for example, that Protein
+    features (especially E-Cadherin) disproportionately drive ILC
+    classification — consistent with the known CDH1 loss mechanism
+    in lobular carcinoma (Ciriello et al., 2015).
 
-Generates 4 types of SHAP figures:
-1. Global SHAP Beeswarm (fig_07)
-2. Omics Attribution Grouped Bar (fig_08) -- KEY SCIENTIFIC FINDING
-3. Per-Class SHAP Summary (fig_09)
-4. Patient Waterfall (fig_10)
+Generated Figures:
+    fig_07: Global SHAP Beeswarm (top 20 features)
+    fig_08: Omics Attribution Grouped Bar Chart (KEY FINDING)
+    fig_09: Per-Class SHAP Summary (IDC vs ILC)
+    fig_10: Patient-Level Waterfall Explanations
+
+Reference:
+    Lundberg, S. M. & Lee, S. I. (2017). A Unified Approach to
+    Interpreting Model Predictions. NeurIPS.
 """
 import numpy as np
 import pandas as pd

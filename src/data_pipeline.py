@@ -1,9 +1,27 @@
 """
-data_pipeline.py -- Day 1: Data loading, cleaning, and preparation.
+data_pipeline.py — TCGA BRCA Data Loading, Cleaning, and Preparation
+======================================================================
+Loads the TCGA BRCA multi-omics dataset, performs content-based column
+deduplication, handles missing values, encodes histological subtype labels,
+and prepares the dataset for the 3-stage feature selection pipeline.
 
-Loads the TCGA BRCA multi-omics dataset, performs content-based deduplication,
-handles missing values, encodes labels, and prepares the dataset for the
-3-stage feature selection pipeline.
+Dataset:
+    TCGA Breast Invasive Carcinoma (BRCA) cohort with 4 omics layers:
+    - mRNA Expression (rs_*): 604 features
+    - Copy Number Variation (cn_*): 761 features
+    - DNA Methylation (mu_*): 249 features
+    - Protein/RPPA (pp_*): 223 features
+    Total: 705 patients × 1,837 unique features (after deduplication)
+
+Target:
+    Histological subtype — binary classification:
+    - Class 0: Infiltrating Ductal Carcinoma (IDC) — 574 samples (81.4%)
+    - Class 1: Infiltrating Lobular Carcinoma (ILC) — 131 samples (18.6%)
+    - Imbalance ratio: 4.4:1 (addressed via SMOTE-inside-CV)
+
+Reference:
+    TCGA Network (2012). Comprehensive molecular portraits of human
+    breast tumours. Nature, 490(7418), 61-70.
 """
 import pandas as pd
 import numpy as np

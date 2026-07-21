@@ -1,8 +1,29 @@
 """
-advanced_models.py -- Day 3: XGBoost + LightGBM tuning + Stacking Ensemble.
+advanced_models.py — XGBoost + LightGBM Tuning and Stacking Ensemble
+=======================================================================
+Hyperparameter optimization for gradient boosted tree models via
+RandomizedSearchCV (50 iterations) with SMOTE-inside-CV pipeline,
+followed by construction of a Stacking Ensemble.
 
-Hyperparameter tuning via GridSearchCV with SMOTE-inside-CV.
-Stacking Ensemble: RF + XGB(best) + LightGBM(best) -> LogisticRegression meta-learner.
+Hyperparameter Tuning:
+    RandomizedSearchCV is used instead of GridSearchCV to efficiently
+    explore a large parameter space. With 50 random samples from a
+    6-dimensional parameter grid (5^6 = 15,625 total configurations),
+    the probability of finding a configuration within the top 5% is
+    approximately 92.3% (Bergstra & Bengio, 2012).
+
+Stacking Ensemble Architecture:
+    Base learners: RF(200) + XGBoost(tuned) + LightGBM(tuned)
+    Meta-learner:  Logistic Regression (max_iter=1000)
+    Each base learner generates out-of-fold predictions via internal 5-fold CV,
+    which the meta-learner uses as input features.
+
+References:
+    Chen, T. & Guestrin, C. (2016). XGBoost: A Scalable Tree Boosting System. KDD.
+    Ke, G. et al. (2017). LightGBM: A Highly Efficient Gradient Boosting Decision
+    Tree. NeurIPS.
+    Bergstra, J. & Bengio, Y. (2012). Random Search for Hyper-Parameter
+    Optimization. JMLR, 13, 281-305.
 """
 import numpy as np
 import pandas as pd

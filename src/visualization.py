@@ -1,19 +1,23 @@
 """
-visualization.py -- All 12 thesis figures with publication-quality formatting.
+visualization.py — Publication-Quality Figure Generation
+==========================================================
+Generates all thesis figures with consistent formatting suitable
+for academic publication. All figures use 300 DPI, sans-serif fonts,
+and a cohesive color palette.
 
-Figures:
-  fig_01: Feature Reduction Funnel
-  fig_02: Label Distribution
-  fig_03: Top 20 Consensus Features
-  fig_04: ROC Curves -- All Models
-  fig_05: Model Comparison Bar (F1-Macro)
-  fig_06: Confusion Matrix -- Best Model
-  fig_07: SHAP Global Beeswarm           (generated in shap_analysis.py)
-  fig_08: Omics Attribution Grouped Bar   (generated in shap_analysis.py)
-  fig_09: Per-Class SHAP                  (generated in shap_analysis.py)
-  fig_10: Patient Waterfall               (generated in shap_analysis.py)
-  fig_11: Fusion Comparison Bar
-  fig_12: Confusion Matrix -- Late Fusion
+Figure Index:
+    fig_01: Feature Reduction Funnel (3-stage consensus pipeline)
+    fig_02: Class Distribution (IDC vs ILC imbalance)
+    fig_03: Top 20 Consensus Features (color-coded by omics layer)
+    fig_04: ROC Curves — All Models (one-vs-rest macro-averaged)
+    fig_05: Model Comparison Bar Chart (F1-Macro, 8 models)
+    fig_06: Confusion Matrix — Best Model
+    fig_07: SHAP Global Beeswarm         (generated in shap_analysis.py)
+    fig_08: Omics Attribution Bar Chart   (generated in shap_analysis.py)
+    fig_09: Per-Class SHAP Summary        (generated in shap_analysis.py)
+    fig_10: Patient Waterfall             (generated in shap_analysis.py)
+    fig_11: Fusion Comparison Bar (Early vs Late)
+    fig_12: Confusion Matrix — Late Fusion (Soft Vote)
 """
 import numpy as np
 import pandas as pd

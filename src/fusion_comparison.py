@@ -1,8 +1,24 @@
 """
-fusion_comparison.py -- Day 5: Early vs Late Fusion Comparison.
+fusion_comparison.py — Early vs Late Multi-Omics Fusion Comparison
+====================================================================
+Compares two multi-omics integration strategies for breast cancer
+subtype classification:
 
-Early Fusion: Concatenate all omics -> single model (Stacking result from Day 3)
-Late Fusion: Train separate XGBClassifier per omics group -> average probabilities (soft vote)
+Early Fusion (Feature-Level Integration):
+    Concatenate all omics features into a single feature matrix and
+    train a single model (Stacking Ensemble). This is the standard
+    approach used throughout the pipeline.
+
+Late Fusion (Decision-Level Integration):
+    Train a separate XGBoost classifier per omics layer, generate
+    per-model prediction probabilities, and average them (soft vote)
+    to produce the final classification.
+
+Rationale:
+    If late fusion outperforms early fusion, it suggests that
+    per-omics models capture complementary signals that are lost
+    when features are naively concatenated. If early fusion wins,
+    inter-omics feature interactions are important for classification.
 """
 import numpy as np
 import pandas as pd

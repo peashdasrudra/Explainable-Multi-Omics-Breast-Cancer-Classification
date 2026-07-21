@@ -1,17 +1,24 @@
 """
-shap_stability.py -- SHAP Ranking Stability Analysis.
+shap_stability.py — SHAP Feature Ranking Stability Analysis
+==============================================================
+Addresses a common reviewer criticism: "SHAP values come from a
+single train/test split — how stable are the feature rankings?"
 
-Addresses reviewer criticism: "SHAP values come from a single split.
-How stable are the feature rankings?"
+This module runs SHAP on N different random train/test splits and
+quantifies ranking stability using three complementary metrics:
 
-This module runs SHAP on multiple random splits and measures:
-1. Jaccard similarity of top-20 feature sets across splits
-2. Spearman rank correlation of SHAP importance rankings
-3. Whether E-Cadherin remains #1 across all splits
+Stability Metrics:
+    1. Jaccard Similarity (top-20 feature set overlap between splits)
+       J > 0.75 indicates strong agreement.
+    2. Spearman Rank Correlation (rank ordering across all features)
+       ρ > 0.90 indicates highly consistent rankings.
+    3. E-Cadherin Rank Consistency (whether the #1 biomarker remains #1)
+       Stable across all splits = clinically robust finding.
 
-Generates:
-    fig_23_shap_stability.png -- Jaccard + rank correlation summary
-    shap_stability_results.csv -- Per-split top-20 rankings
+Generated Outputs:
+    fig_23_shap_stability.png — Combined stability visualization
+    shap_stability_results.csv — Per-split top-20 feature rankings
+    shap_stability_summary.csv — Aggregated stability metrics
 """
 import numpy as np
 import pandas as pd

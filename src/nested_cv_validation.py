@@ -1,22 +1,33 @@
 """
-nested_cv_validation.py -- Leak-Free Nested Cross-Validation.
+nested_cv_validation.py — Leak-Free Nested Cross-Validation
+==============================================================
+Addresses the #1 reviewer criticism in machine learning for genomics:
+feature selection on the full dataset before cross-validation causes
+information leakage, potentially inflating performance estimates.
 
-Addresses the #1 reviewer criticism: feature selection on the full dataset
-before CV causes information leakage.
-
-This module wraps the ENTIRE feature selection pipeline inside each outer
-CV fold, so that test data NEVER influences feature selection. The results
-are compared against the original (non-nested) pipeline to prove that the
-leakage was negligible.
+This module wraps the ENTIRE 3-stage feature selection pipeline inside
+each outer CV fold, so that test data NEVER influences feature selection.
+The results are compared against the original (non-nested) pipeline to
+quantify the magnitude of any leakage.
 
 Methodology:
-    For each outer fold k=1..5:
-        1. Split data into train_k and test_k
+    For each outer fold k = 1..5:
+        1. Split data into train_k and test_k (stratified)
         2. Run 3-stage feature selection on train_k ONLY
         3. Reduce both train_k and test_k to the selected features
-        4. Train SMOTE + model pipeline on train_k
+        4. Train SMOTE + LightGBM pipeline on train_k
         5. Evaluate on test_k
-    Report: per-fold F1 and mean +/- std across folds
+    Report: per-fold F1 and mean ± std across folds
+
+Interpretation:
+    If |Δ F1| < 0.03 between nested and original results, the
+    feature selection leakage was NEGLIGIBLE, validating the
+    original pipeline's reported metrics.
+
+Generated Outputs:
+    fig_21_nested_cv_comparison.png — Nested vs Original bar chart
+    fig_22_feature_stability_nested.png — Feature selection stability
+    nested_cv_results.csv — Per-fold nested CV results
 """
 import numpy as np
 import pandas as pd

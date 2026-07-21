@@ -1,12 +1,31 @@
 """
-baseline_models.py -- Day 2: Five baseline classifiers with SMOTE-inside-CV.
+baseline_models.py — Five Baseline Classifiers with SMOTE-inside-CV
+=====================================================================
+Evaluates five diverse baseline classifiers using Stratified K-Fold
+Cross-Validation with SMOTE applied exclusively inside training folds.
 
-CRITICAL: Uses imblearn.pipeline.Pipeline (NOT sklearn.pipeline.Pipeline)
-to ensure SMOTE is applied ONLY inside training folds -- preventing
-information leakage from oversampling.
+CRITICAL DESIGN DECISION:
+    Uses imblearn.pipeline.Pipeline (NOT sklearn.pipeline.Pipeline).
+    This ensures that SMOTE oversampling is applied ONLY to training
+    folds during cross-validation — preventing synthetic minority
+    samples from leaking into validation folds. Using sklearn.Pipeline
+    with SMOTE is a widespread methodological error that inflates
+    reported performance metrics.
 
-Models: Logistic Regression, SVM (RBF), KNN (k=5), Naive Bayes, Random Forest
-Metrics: Accuracy, Precision, Recall, F1-Macro, AUC-ROC, MCC
+Models:
+    1. Logistic Regression (L2, max_iter=1000)
+    2. Support Vector Machine (RBF kernel, probability=True)
+    3. K-Nearest Neighbors (k=5)
+    4. Gaussian Naive Bayes
+    5. Random Forest (n_estimators=200)
+
+Metrics:
+    Accuracy, Precision (weighted), Recall (weighted), F1-Macro,
+    AUC-ROC (one-vs-rest), Matthews Correlation Coefficient (MCC)
+
+References:
+    Chawla, N. V., et al. (2002). SMOTE: Synthetic Minority Over-sampling
+    Technique. Journal of Artificial Intelligence Research, 16, 321-357.
 """
 import numpy as np
 import pandas as pd
