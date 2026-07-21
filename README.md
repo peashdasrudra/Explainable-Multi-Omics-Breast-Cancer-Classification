@@ -2,6 +2,10 @@
 
 **Consensus Feature Selection, Ensemble Learning, and Cross-Omics SHAP Attribution on TCGA-BRCA**
 
+<div align="center">
+  <img src="outputs/figures/fig_08_omics_attribution.png" alt="Cross-Omics SHAP Attribution" width="800"/>
+</div>
+
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.3%2B-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0%2B-22A652?style=flat-square)](https://xgboost.readthedocs.io/)
@@ -31,6 +35,10 @@ Evaluated over 8 machine learning models, **LightGBM (tuned)** achieves the top 
 ## Executive Summary & Key Results
 
 ### Primary Benchmark Performance (8 Models across 5-Fold Stratified CV)
+
+<div align="center">
+  <img src="outputs/figures/fig_05_model_comparison.png" alt="Model Comparison Bar Chart" width="800"/>
+</div>
 
 | Model | F1-Macro ($\mu \pm \sigma$) | AUC-ROC ($\mu \pm \sigma$) | MCC ($\mu \pm \sigma$) | Precision ($\mu \pm \sigma$) | Recall ($\mu \pm \sigma$) |
 |:---|:---:|:---:|:---:|:---:|:---:|
@@ -130,30 +138,15 @@ The dataset comprises **705 primary breast cancer patients** from the Cancer Gen
 - **Infiltrating Lobular Carcinoma (ILC)**: $128 \text{ patients } (18.2\%)$
 - **Class Imbalance Ratio**: $4.51 : 1$
 
-```
-                   TCGA BRCA MULTI-OMICS MOLECULAR PROFILES (705 Patients)
-                                             │
-      ┌──────────────────────┬───────────────┴───────────────┬──────────────────────┐
-      ▼                      ▼                               ▼                      ▼
-  mRNA Expression       Protein Array (RPPA)          DNA Methylation             CNV
-  Prefix: `rs_`         Prefix: `pp_`                 Prefix: `mu_`          Prefix: `cn_`
-  1,424 Features        216 Features                  108 Features           89 Features
-      │                      │                               │                      │
-      └──────────────────────┴───────────────┬───────────────┴──────────────────────┘
-                                             ▼
-                             3-STAGE CONSENSUS SELECTION FUNNEL
-                                             │
-      ┌──────────────────────┬───────────────┴───────────────┬──────────────────────┐
-      ▼                      ▼                               ▼                      ▼
-   47 mRNA                24 Protein                    2 Methylation             2 CNV
-   (62.7%)                (32.0%)                       (2.7%)                    (2.7%)
-      │                      │                               │                      │
-      └──────────────────────┴───────────────┬───────────────┴──────────────────────┘
-                                             ▼
-                             75 CONSOLIDATED MULTI-OMICS FEATURES
-```
+<div align="center">
+  <img src="outputs/figures/fig_02_label_dist.png" alt="Class Distribution" width="600"/>
+</div>
 
 ### Preprocessing & Feature Funnel Stages
+
+<div align="center">
+  <img src="outputs/figures/fig_01_funnel.png" alt="Feature Selection Funnel Diagram" width="800"/>
+</div>
 
 1. **Data Cleaning & Content Deduplication**:
    - Identical feature columns evaluated via pairwise content hashing; duplicates removed.
@@ -215,6 +208,10 @@ The dataset comprises **705 primary breast cancer patients** from the Cancer Gen
 
 ### 1. Fusion Architecture Benchmark (Early vs. Late Fusion)
 
+<div align="center">
+  <img src="outputs/figures/fig_11_fusion_comparison.png" alt="Fusion Comparison" width="800"/>
+</div>
+
 | Strategy | Architecture | F1-Macro | AUC-ROC | MCC | Precision | Recall |
 |:---|:---|:---:|:---:|:---:|:---:|:---:|
 | **Early Fusion** | Concatenated 75 features $\rightarrow$ Stacking Ensemble | 0.8959 | 0.9655 | 0.7955 | 0.9038 | 0.8891 |
@@ -224,6 +221,10 @@ The dataset comprises **705 primary breast cancer patients** from the Cancer Gen
 
 ### 2. Cross-Omics SHAP Attribution Breakdown
 
+<div align="center">
+  <img src="outputs/figures/fig_08_omics_attribution.png" alt="Cross-Omics SHAP Layer Attribution" width="800"/>
+</div>
+
 | Omics Modality Layer | Prefix | Selected Features ($N=75$) | Feature Count % | Absolute SHAP Attribution ($\sum |\phi_i|$) | **Attribution %** |
 |:---|:---:|:---:|:---:|:---:|:---:|
 | **Protein (RPPA)** | `pp_` | 24 | 32.0% | 1.8420 | **40.26%** |
@@ -231,17 +232,11 @@ The dataset comprises **705 primary breast cancer patients** from the Cancer Gen
 | **DNA Methylation** | `mu_` | 2 | 2.7% | 0.5691 | **12.44%** |
 | **Copy Number Variation** | `cn_` | 2 | 2.7% | 0.4187 | **9.15%** |
 
-```
-                       CROSS-OMICS SHAP ATTRIBUTION PERCENTAGE (%)
-   ┌─────────────────────────────────────────────────────────────────────────────────┐
-   │ Protein (RPPA)        [########################################] 40.26%         │
-   │ mRNA Expression       [################────────────────────────] 38.15%         │
-   │ DNA Methylation       [############────────────────────────────] 12.44%         │
-   │ Copy Number (CNV)     [#########───────────────────────────────]  9.15%         │
-   └─────────────────────────────────────────────────────────────────────────────────┘
-```
-
 ### 3. Top 10 Consensus Biomarkers
+
+<div align="center">
+  <img src="outputs/figures/fig_07_shap_beeswarm.png" alt="Global SHAP Beeswarm Plot" width="800"/>
+</div>
 
 | Rank | Feature Code | Omics Modality | Full Molecular Name | Consensus Score | SHAP Rank Stability ($5/5$ Splits) |
 |:---:|:---|:---:|:---|:---:|:---:|
@@ -258,6 +253,10 @@ The dataset comprises **705 primary breast cancer patients** from the Cancer Gen
 
 ### 4. Statistical Significance Testing (Wilcoxon Signed-Rank Test)
 
+<div align="center">
+  <img src="outputs/figures/fig_25_significance_30fold.png" alt="Wilcoxon 30-Fold Heatmap" width="800"/>
+</div>
+
 Pairwise two-tailed Wilcoxon signed-rank tests executed over $30$-fold repeated cross-validation ($10 \times 3$ repeated stratified K-fold) confirm that the performance gains of LightGBM and XGBoost over baseline models are statistically significant:
 
 | Model Pair Comparison ($\mathcal{M}_A$ vs $\mathcal{M}_B$) | Statistic $W$ | $p$-value | Significance Level ($\alpha=0.05$) |
@@ -268,6 +267,10 @@ Pairwise two-tailed Wilcoxon signed-rank tests executed over $30$-fold repeated 
 | **LightGBM** vs. **XGBoost** | 184.0 | $0.2140$ | No Significant Difference |
 
 ### 5. Omics Ablation Analysis (Leave-One-Modality-Out)
+
+<div align="center">
+  <img src="outputs/figures/fig_15_ablation_study.png" alt="Omics Ablation Study" width="800"/>
+</div>
 
 | Ablation Configuration | Features | F1-Macro | $\Delta$ F1-Macro | AUC-ROC |
 |:---|:---:|:---:|:---:|:---:|
@@ -284,6 +287,10 @@ Pairwise two-tailed Wilcoxon signed-rank tests executed over $30$-fold repeated 
 ---
 
 ## Biological & Clinical Validation
+
+<div align="center">
+  <img src="outputs/figures/fig_26_pathway_analysis.png" alt="GO and KEGG Pathway Enrichment" width="800"/>
+</div>
 
 ```
                                 MOLECULAR PATHWAY & HALLMARK MECHANISM
